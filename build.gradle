@@ -1,0 +1,146 @@
+group = 'cn.com.tools.service'
+version='1.0.0'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.gradle.build-scan'
+
+jar {
+    baseName = 'creating-pdf-service'
+    version = version
+    manifest {
+        attributes 'Main-Class': 'gehc.gst.smartx.core.Application'
+    }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+buildscript {
+    ext {
+        springBootVersion = '1.5.10.RELEASE'
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath 'com.gradle:build-scan-plugin:1.0'
+    }
+}
+
+defaultTasks 'verification','clean','build'
+
+buildScan {
+    licenseAgreementUrl = 'https://gradle.com/terms-of-service'
+    licenseAgree = 'yes'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Camden.SR2"
+    }
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-jdbc'){
+        exclude module: "spring-boot-starter-logging"
+        exclude module: "logback-classic"
+    }
+    compile('org.springframework.boot:spring-boot-starter-web'){
+        exclude module: "spring-boot-starter-logging"
+        exclude module: "logback-classic"
+    }
+    compile ('org.springframework.boot:spring-boot-starter-actuator'){
+        exclude module: "spring-boot-starter-logging"
+        exclude module: "logback-classic"
+    }
+    compile('org.springframework.cloud:spring-cloud-starter-config')
+    compile('org.projectlombok:lombok')
+    compile('org.projectlombok:lombok:1.16.+')
+    compile 'io.springfox:springfox-swagger-ui:2.6.1'
+    compile 'io.springfox:springfox-swagger2:2.6.1'
+
+    compile 'com.itextpdf:itextpdf:5.5.9'
+    compile 'com.itextpdf.tool:xmlworker:5.4.1'
+    compile 'com.itextpdf:itext-asian:5.2.0'
+    compile 'org.xhtmlrenderer:flying-saucer-pdf:9.0.3'
+    compile 'commons-pool:commons-pool:1.6'
+
+    compile files('lib/freemarker-2.3.25.jar')
+
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+def v = getVersion()
+jar.manifest.attributes.put 'Implementation-Version', v
+jar.manifest.attributes.put 'Implementation-Title', project.name
+
+task verification {
+    doFirst {
+        def c = "Build for verification"
+        createVersionDesc(c)
+    }
+}
+
+task daily {
+    doFirst {
+        def c = "Daily build"
+        createVersionDesc(c)
+    }
+}
+
+def createVersionDesc(c){
+    def t = getBuildTime()
+    def v = getVersion()
+    def b = getCurrentBranch()
+    writeVersionDesc(v,t,c,b)
+    print("moudleName:"+project.name+",comment:"+c+"\n")
+}
+
+task testMyWork << {
+    getVersion()
+    def t = getBuildTime()
+    print("Now: "+t)
+}
+
+def getVersion(){
+    def proc = "git rev-parse --short HEAD".execute()
+    proc.waitFor()
+    def r = proc.in.text.replace("\n","")
+    return r
+}
+
+def getBuildTime(){
+    return new Date().format("yyyy-MM-dd HH:mm:ss")
+}
+
+def getCurrentBranch(){
+    def proc = "git symbolic-ref --short -q HEAD".execute()
+    proc.waitFor()
+    def r = proc.in.text.replace("\n","")
+    return r
+}
+
+def writeVersionDesc(versionId,buildTs,comment,branch){
+    def file=new File('src/main/resources/static/version.json')
+    def printWriter = file.newPrintWriter()
+    printWriter.write("{\"version\":\""+versionId+"\","
+            +"\"build_time\":\""+buildTs+"\","
+            +"\"branch\":\""+branch+"\","
+            +"\"comment\":\""+comment+"\"}")
+    printWriter.flush()
+    printWriter.close()
+}

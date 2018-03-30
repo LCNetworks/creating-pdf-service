@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: creating-pdf-service
+  cloud:
+    config:
+      uri:  http://discovery:8801
+      profile: dev
+    name: creating-pdf-service
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery:8761/eureka/
+  instance:
+    preferIpAddress: false
+server:
+  port: 18010

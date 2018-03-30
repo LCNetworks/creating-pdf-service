@@ -1,0 +1,56 @@
+println "the project name is $name"
+task Hello<<{
+  println "the current task name is $name"
+  println "hello, han"
+}
+
+task printSysProps << {
+  println System.properties['system']
+}
+
+task printProps << {
+    if (project.hasProperty('myProjectProp')) {  
+        println myProjectProp
+    }  
+}
+
+allprojects {
+    task hello << {task -> println "I'm $task.project.name" }
+}
+subprojects {
+    hello << {println "- I am the sub project of A"}
+}
+project(':core').hello << {
+      println "- I'm the core component and provide service for other parts."
+}
+
+task filelist{
+	FileTree tree = fileTree(dir: "./")
+	tree.include '**/*.*'
+	tree.each {File file-> println file}
+}
+
+task readFile{
+	def t = new File("./dir.txt")
+	t.eachLine{String line-> print line}
+}
+
+  
+def writeFile(fileName) {  
+    def file = new File(fileName)  
+      
+    if (file.exists())   
+        file.delete()  
+          
+    def printWriter = file.newPrintWriter() //   
+      
+    printWriter.write('The first content of file')  
+    printWriter.write('\n')  
+    printWriter.write('The first content of file')  
+      
+    printWriter.flush()  
+    printWriter.close()  
+} 
+task writeFile{
+	writeFile('hello.txt')
+}

@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Implementation-Title: creating-pdf-service
+Implementation-Version: 06e5b84
+Main-Class: gehc.gst.smartx.core.Application
+
